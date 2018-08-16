@@ -10,4 +10,4 @@ SmartDeviceLink (SDL) is a standard set of protocols and messages that connect a
 <a href="http://www.youtube.com/watch?feature=player_embedded&v=AzdQdSCS24M" target="_blank"><img src="http://i.imgur.com/nm8UujD.png?1" alt="SmartDeviceLink" border="10" /></a>
 
 ## Manticore Images
-This repository houses the code used to build Core and HMI images for [Manticore's](https://github.com/smartdevicelink/manticore/) use. All built images are stored under the [smartdevicelink](https://hub.docker.com/u/smartdevicelink/) organization in Docker Hub. 
+This repository houses the code used to build images for [Manticore's](https://github.com/smartdevicelink/manticore/) use. All built images are stored under the [smartdevicelink](https://hub.docker.com/u/smartdevicelink/) organization in Docker Hub. 
