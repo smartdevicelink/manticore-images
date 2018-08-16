@@ -1,0 +1,16 @@
+{
+  "name": "sample-ws-server",
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "author": "",
+  "license": "BSD-3-Clause",
+  "dependencies": {
+    "tail-stream": "0.3.4",
+    "ws": "5.2.0"
+  },
+  "description": ""
+}
