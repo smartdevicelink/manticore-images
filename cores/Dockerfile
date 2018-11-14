@@ -88,26 +88,26 @@ RUN cmake -DBUILD_AVAHI_SUPPORT=$DBUILD_AVAHI_SUPPORT \
     && mv /usr/tmpbin bin 
     
 RUN mkdir -p /usr/web/logstream 
+RUN mkdir -p /usr/web/broker
 WORKDIR /usr/web/logstream
 
 # Copy node and npm files
-COPY package.json /usr/web/logstream/package.json
-COPY package-lock.json /usr/web/logstream/package-lock.json
-COPY server.js /usr/web/logstream/server.js
+COPY logstream /usr/web/logstream/
+COPY broker /usr/web/broker/
 
-# Install nvm and dependencies
+# Install nvm
 RUN curl -sL https://raw.githubusercontent.com/creationix/nvm/v0.31.0/install.sh -o install_nvm.sh
 RUN bash install_nvm.sh
 RUN /bin/bash -c "source /root/.bashrc; \
     nvm install v8.11.1 \
     nvm use v8.11.1 \
-    nvm alias default v8.11.1; \
-    npm install"
+    nvm alias default v8.11.1"
 
-# Download and setup the broker
-RUN mkdir -p /usr/web/broker \
-    && curl -sSL https://github.com/smartdevicelink/sdl_broker/archive/master.tar.gz \
-    | tar -v -C /usr/web/broker -xz --strip-components 1
+# Install dependencies
+
+WORKDIR /usr/web/logstream
+RUN /bin/bash -c "source /root/.bashrc; \
+    npm install"
 
 WORKDIR /usr/web/broker
 RUN /bin/bash -c "source /root/.bashrc; \
