@@ -57,6 +57,9 @@ RUN git clone https://github.com/smartdevicelink/generic_hmi.git /usr/app/webapp
 
 WORKDIR /usr/app/webapp
 
+COPY package.json package.json
+COPY webpack.config.js webpack.config.js
+
 # Install dependencies and run webpack so we can guarantee the bundle.js file exists
 # Remove everything but the build/bundle.js file and the index.html file
 RUN npm install \
