@@ -34,7 +34,7 @@
 # ##################################################################################################
 
 # This image is based of debian
-FROM buildpack-deps:jessie-curl
+FROM buildpack-deps:stretch
 
 MAINTAINER Chris Rokita version:1.0
 
@@ -54,7 +54,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         cmake \
         libudev-dev \
         libsqlite3-dev \
-        libssl-dev \
+        libssl1.0-dev \
         nginx \
         python \
         sudo \
@@ -89,11 +89,13 @@ RUN cmake -DBUILD_AVAHI_SUPPORT=$DBUILD_AVAHI_SUPPORT \
     
 RUN mkdir -p /usr/web/logstream 
 RUN mkdir -p /usr/web/broker
+RUN mkdir -p /usr/web/policy
 WORKDIR /usr/web/logstream
 
 # Copy node and npm files
 COPY logstream /usr/web/logstream/
 COPY broker /usr/web/broker/
+COPY policy /usr/web/policy/
 
 # Install nvm
 RUN curl -sL https://raw.githubusercontent.com/creationix/nvm/v0.31.0/install.sh -o install_nvm.sh
@@ -110,6 +112,10 @@ RUN /bin/bash -c "source /root/.bashrc; \
     npm install"
 
 WORKDIR /usr/web/broker
+RUN /bin/bash -c "source /root/.bashrc; \
+    npm install"
+
+WORKDIR /usr/web/policy
 RUN /bin/bash -c "source /root/.bashrc; \
     npm install"
 
@@ -143,8 +149,9 @@ COPY log4cxx.properties /usr/build/bin/log4cxx.properties
 #   5080: Expose audio streaming port
 #   8090: Expose time testing port
 #   8888: Expose websocket port for core log streaming
-#   9000:  Websocket connection to the broker
-EXPOSE 3001 12345 5050 5080 8090 8888 9000
+#   9000: Websocket connection to the broker
+#   9898: Expose miniature policy server port
+EXPOSE 3001 12345 5050 5080 8090 8888 9000 9898
 
 # Run the start script that will launch SDL Core!
 CMD ["/bin/bash", "setup.sh"]

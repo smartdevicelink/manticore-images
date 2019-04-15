@@ -34,7 +34,7 @@
 # ##################################################################################################
 
 # This image has node and npm preinstalled
-FROM node:7.10.0-slim
+FROM node:10.15.3-stretch-slim
 
 MAINTAINER Chris Rokita version:1.0
 
@@ -45,6 +45,9 @@ ENV BROKER_ADDR ws:\/\/127.0.0.1:9000
 # Install dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
+    build-essential \
+    libpng-dev \
+    python \
     nginx 
 
 # Download Generic HMI from github 
@@ -55,7 +58,7 @@ RUN git clone https://github.com/smartdevicelink/generic_hmi.git /usr/app/webapp
 WORKDIR /usr/app/webapp
 
 # Install dependencies and run webpack so we can guarantee the bundle.js file exists
-# Remove everything but the build/bundle.js file and the index.html file 
+# Remove everything but the build/bundle.js file and the index.html file
 RUN npm install \
 	&& npm rebuild node-sass \
 	&& ./node_modules/webpack/bin/webpack.js \
