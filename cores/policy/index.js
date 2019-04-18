@@ -100,6 +100,33 @@ router.post('/api/v1/cloud', async (ctx, next) => {
     ctx.response.status = 200
 })
 
+const cloudDeleteSchema = Joi.object().keys({
+    app_id: Joi.string().regex(/^[A-z0-9\-]+$/, 'Alphanumeric Plus Hyphens').required()
+})
+
+//the Manticore UI hits this endpoint
+router.delete('/api/v1/cloud', async (ctx, next) => {
+    const { body } = ctx.request
+
+    const result = Joi.validate(body, cloudDeleteSchema)
+    if (result.error) {
+        ctx.response.status = 400
+        return ctx.body = {
+            error: result.error.message
+        }
+    }
+    const { app_id } = result.value
+
+    let table = JSON.parse(await readFile(ptPath))
+
+    //disable the app id from the table
+    table.policy_table.app_policies[app_id] = null
+
+    await writeFile(ptPath, JSON.stringify(table, null, 4))
+
+    ctx.response.status = 200
+})
+
 function createAppPolicyObj (cloudPost, isSecure) {
     return {
         "keep_context": false,
@@ -115,7 +142,35 @@ function createAppPolicyObj (cloudPost, isSecure) {
         "endpoint": cloudPost.endpoint,
         "auth_token": cloudPost.auth_token,
         "cloud_transport_type": isSecure ? "WSS" : "WS",
-        "nicknames": cloudPost.nicknames        
+        "nicknames": cloudPost.nicknames,
+        "app_services": {
+            "MEDIA": {
+                "handled_rpcs": [
+                    {
+                        "function_id": 41
+                    }
+                ]
+            },
+            "NAVIGATION": {
+                "handled_rpcs": [
+                    {
+                        "function_id": 45
+                    },
+                    {
+                        "function_id": 32784
+                    },
+                    {
+                        "function_id": 39
+                    },
+                    {
+                        "function_id": 46
+                    }
+                ]
+            },
+            "WEATHER": {
+                "handled_rpcs": []
+            }
+        }     
     }
 }
 
