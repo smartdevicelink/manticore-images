@@ -43,7 +43,7 @@ const path = require('path')
 const readFile = util.promisify(fs.readFile)
 const writeFile = util.promisify(fs.writeFile)
 const ptPath = path.resolve(__dirname, 'pt.json')
-
+const ptOutPath = path.resolve(__dirname, 'ptu.json') //this is the one sdl_core uses. pt.json is for the server to use
 app.use(cors())
 app.use(bodyParser())
 const router = new Router()
@@ -56,11 +56,11 @@ router.get('/', async (ctx, next) => {
 router.post('/api/v1/production/policy', async (ctx, next) => {
     let table = JSON.parse(await readFile(ptPath))
     if (ctx.request.body.policy_table && ctx.request.body.policy_table.app_policies) {
-      for (let appId in ctx.request.body.policy_table.app_policies) {
+        for (let appId in ctx.request.body.policy_table.app_policies) {
             if (appId !== "default" && appId !== "device" && appId !== "pre_DataConsent") {
                 table.policy_table.app_policies[appId] = "default"
             }
-        }  
+        }
     }
     
     ctx.response.body = {
@@ -96,8 +96,12 @@ router.post('/api/v1/cloud', async (ctx, next) => {
     table.policy_table.app_policies[input.app_id] = appPolicyObj
 
     await writeFile(ptPath, JSON.stringify(table, null, 4))
+    await writeFile(ptOutPath, JSON.stringify(table, null, 4))
 
     ctx.response.status = 200
+    ctx.response.body = {
+        ptLocation: ptOutPath
+    }
 })
 
 const cloudDeleteSchema = Joi.object().keys({
@@ -123,8 +127,12 @@ router.delete('/api/v1/cloud', async (ctx, next) => {
     table.policy_table.app_policies[app_id] = null
 
     await writeFile(ptPath, JSON.stringify(table, null, 4))
+    await writeFile(ptOutPath, JSON.stringify(table, null, 4))
 
     ctx.response.status = 200
+    ctx.response.body = {
+        ptLocation: ptOutPath
+    }
 })
 
 function createAppPolicyObj (cloudPost, isSecure) {
