@@ -71,7 +71,7 @@ router.post('/api/v1/production/policy', async (ctx, next) => {
 
 const cloudPostSchema = Joi.object().keys({
     app_id: Joi.string().regex(/^[A-z0-9\-]+$/, 'Alphanumeric Plus Hyphens').required(),
-    endpoint: Joi.string().regex(/^(wss?:\/\/)([A-z\d\.-]{2,}\.?([A-z]{2,})?)(:(\d{2,5}))?(\/[A-z\d\.-]+)*\/?$/, 'Websocket URL').required(),
+    endpoint: Joi.string().regex(/^(wss?:\/\/)([A-z\d\.-]{2,}\.?([A-z]{2,})?)(:(\d{2,5}))?(\/[A-z\d\.-_]+)*\/?$/, 'Websocket URL').required(),
     auth_token: Joi.string().allow('').required(),
     nicknames: Joi.array().items(Joi.string()).required()
 })
