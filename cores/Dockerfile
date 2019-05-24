@@ -73,6 +73,10 @@ RUN mkdir /usr/build
 # Work inside the build folder
 WORKDIR /usr/build
 
+# Git needs to be configured now...
+RUN git config --global user.email "anon@mail.com"
+RUN git config --global user.name "Anonymous"
+
 # Generate our Makefile, compile it and install
 # Remove everything but what's inside the bin folder of the build directory to save space
 RUN cmake -DBUILD_AVAHI_SUPPORT=$DBUILD_AVAHI_SUPPORT \
