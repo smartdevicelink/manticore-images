@@ -135,13 +135,14 @@ router.delete('/api/v1/cloud', async (ctx, next) => {
     }
 })
 
+
 function createAppPolicyObj (cloudPost, isSecure) {
     return {
         "keep_context": false,
         "steal_focus": false,
         "priority": "NONE",
         "default_hmi": "NONE",
-        "groups": ["Base-4", "Location-1", "Notifications", "DrivingCharacteristics-3", "VehicleInfo-3", "PropriataryData-1", "PropriataryData-2", "ProprietaryData-3", "Emergency-1", "Navigation-1", "Base-6", "OnKeyboardInputOnlyGroup", "OnTouchEventOnlyGroup", "DiagnosticMessageOnly", "DataConsent-2", "BaseBeforeDataConsent", "SendLocation", "WayPoints", "BackgroundAPT", "Notifications-RC", "RemoteControl", "HapticGroup", "CloudApp", "AppServiceProducer", "AppServiceConsumer"],
+        "groups": ["Base-4", "Location-1", "Notifications", "Notifications-RC", "DrivingCharacteristics-3", "VehicleInfo-3", "PropriataryData-1", "PropriataryData-2", "ProprietaryData-3", "CloudAppStore", "CloudApp", "AppServiceProvider", "AppServiceConsumer", "RemoteControl", "Emergency-1", "Navigation-1", "Base-6", "OnKeyboardInputOnlyGroup", "OnTouchEventOnlyGroup", "DiagnosticMessageOnly", "DataConsent-2", "BaseBeforeDataConsent", "SendLocation", "WayPoints", "BackgroundAPT", "HapticGroup"],
         "moduleType": ["CLIMATE", "RADIO", "SEAT", "AUDIO", "LIGHT", "HMI_SETTINGS"],
         "RequestType": [],
         "RequestSubType": [],
@@ -154,29 +155,39 @@ function createAppPolicyObj (cloudPost, isSecure) {
         "app_services": {
             "MEDIA": {
                 "handled_rpcs": [
-                    {
-                        "function_id": 41
-                    }
+                    { "function_id": 39 },
+                    { "function_id": 41 },
+                    { "function_id": 48 },
+                    { "function_id": 52 },
+                    { "function_id": 53 },
+                    { "function_id": 32786 },
+                    { "function_id": 32787 }
                 ]
             },
             "NAVIGATION": {
                 "handled_rpcs": [
-                    {
-                        "function_id": 45
-                    },
-                    {
-                        "function_id": 32784
-                    },
-                    {
-                        "function_id": 39
-                    },
-                    {
-                        "function_id": 46
-                    }
+                    { "function_id": 39 },
+                    { "function_id": 41 },
+                    { "function_id": 45 },
+                    { "function_id": 46 },
+                    { "function_id": 48 },
+                    { "function_id": 52 },
+                    { "function_id": 53 },
+                    { "function_id": 32784 },
+                    { "function_id": 32786 },
+                    { "function_id": 32787 }
                 ]
             },
             "WEATHER": {
-                "handled_rpcs": []
+                "handled_rpcs": [
+                    { "function_id": 39 },
+                    { "function_id": 41 },
+                    { "function_id": 48 },
+                    { "function_id": 52 },
+                    { "function_id": 53 },
+                    { "function_id": 32786 },
+                    { "function_id": 32787 }
+                ]
             }
         }     
     }

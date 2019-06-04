@@ -149,6 +149,9 @@ COPY log4cxx.properties /usr/build/bin/log4cxx.properties
 # Replace hmi capabilities file with a custom made one
 COPY hmi_capabilities.json /usr/build/bin/hmi_capabilities.json
 
+# Replace sdl_preloaded_pt file with a custom made one
+COPY sdl_preloaded_pt.json /usr/build/bin/sdl_preloaded_pt.json
+
 # Expose the following ports
 #   3001: Expose SDL Core's file system
 #   12345: Expose SDL Core's primary port. Used to communicate with the SDL Core instance over TCP
