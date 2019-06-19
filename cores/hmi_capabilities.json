@@ -298,6 +298,12 @@
             "imageSupported": true
         }],
         "systemCapabilities": {
+            "navigationCapability": {
+            },
+            "phoneCapability": {
+            },
+            "videoStreamingCapability": {
+            },
             "remoteControlCapability": {
                 "buttonCapabilities": [
                     {
