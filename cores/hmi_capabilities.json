@@ -804,7 +804,7 @@
         ]
     },
     "TTS": {
-        "capabilities": ["TEXT"],
+        "capabilities": ["TEXT", "FILE"],
         "language": "EN-US",
         "languages": [
             "EN-US", "ES-MX", "FR-CA", "DE-DE", "ES-ES", "EN-GB", "RU-RU", "TR-TR", "PL-PL", "FR-FR", "IT-IT", "SV-SE", "PT-PT", "NL-NL", "ZH-TW",
