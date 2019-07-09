@@ -154,40 +154,13 @@ function createAppPolicyObj (cloudPost, isSecure) {
         "nicknames": cloudPost.nicknames,
         "app_services": {
             "MEDIA": {
-                "handled_rpcs": [
-                    { "function_id": 39 },
-                    { "function_id": 41 },
-                    { "function_id": 48 },
-                    { "function_id": 52 },
-                    { "function_id": 53 },
-                    { "function_id": 32786 },
-                    { "function_id": 32787 }
-                ]
+                "handled_rpcs": []
             },
             "NAVIGATION": {
-                "handled_rpcs": [
-                    { "function_id": 39 },
-                    { "function_id": 41 },
-                    { "function_id": 45 },
-                    { "function_id": 46 },
-                    { "function_id": 48 },
-                    { "function_id": 52 },
-                    { "function_id": 53 },
-                    { "function_id": 32784 },
-                    { "function_id": 32786 },
-                    { "function_id": 32787 }
-                ]
+                "handled_rpcs": []
             },
             "WEATHER": {
-                "handled_rpcs": [
-                    { "function_id": 39 },
-                    { "function_id": 41 },
-                    { "function_id": 48 },
-                    { "function_id": 52 },
-                    { "function_id": 53 },
-                    { "function_id": 32786 },
-                    { "function_id": 32787 }
-                ]
+                "handled_rpcs": []
             }
         }     
     }
