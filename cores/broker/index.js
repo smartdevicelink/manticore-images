@@ -71,7 +71,7 @@ var wsServer = new WebSocketServer({
 
 wsServer.on('request', function(hmi){
 
-    var connection = hmi.accept('echo-protocol', hmi.origin);
+    var connection = hmi.accept(null, hmi.origin);
     console.log("Client Connected");
     var id = numClients++;
     conClients[id] = connection;
