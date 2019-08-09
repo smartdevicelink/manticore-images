@@ -33,7 +33,8 @@
                 "COMMUNICATION": 6,
                 "NORMAL": 4,
                 "NONE": 0
-            }
+            },
+            "lock_screen_dismissal_enabled": true
         },
         "functional_groupings": {
             "Base-4": {
@@ -304,6 +305,13 @@
                         "LIMITED"],
                         "parameters": ["gps",
                         "speed"]
+                    }
+                }
+            },
+            "LockScreenDismissalWarning":{
+                "languages":{
+                    "en-us":{
+                        "textBody": "Swipe down to dismiss, acknowledging that you are not the driver"
                     }
                 }
             },
