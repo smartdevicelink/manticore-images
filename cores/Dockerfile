@@ -38,19 +38,19 @@ FROM buildpack-deps:stretch
 
 MAINTAINER Chris Rokita version:1.0
 
-ARG CORE_VERSION=master
-ARG DBUILD_AVAHI_SUPPORT=OFF
-ARG DBUILD_USB_SUPPORT=OFF
-ARG DBUILD_BT_SUPPORT=OFF
-ARG DEXTENDED_MEDIA_MODE=OFF
-ARG DENABLE_HMI_PTU_DECRYPTION=OFF
+ARG CORE_VERSION=master 
+ARG DBUILD_AVAHI_SUPPORT=OFF 
+ARG DBUILD_USB_SUPPORT=OFF 
+ARG DBUILD_BT_SUPPORT=OFF 
+ARG DEXTENDED_MEDIA_MODE=OFF 
+ARG DENABLE_HMI_PTU_DECRYPTION=OFF 
 
-ENV CORE_NETWORK_INTERFACE eth0
+ENV CORE_NETWORK_INTERFACE eth0 
 ENV CORE_VERSION=${CORE_VERSION}
 
 # Install dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        build-essential \
+        build-essential \ 
         cmake \
         libudev-dev \
         libsqlite3-dev \
@@ -60,7 +60,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         sudo \
         supervisor \
         sqlite3 \
-        git
+        git 
 
 # Download SDL Core from github
 WORKDIR /usr
@@ -89,9 +89,9 @@ RUN cmake -DBUILD_AVAHI_SUPPORT=$DBUILD_AVAHI_SUPPORT \
     && make install \
     && mv bin /usr/tmpbin \
     && rm -rf * \
-    && mv /usr/tmpbin bin
-
-RUN mkdir -p /usr/web/logstream
+    && mv /usr/tmpbin bin 
+    
+RUN mkdir -p /usr/web/logstream 
 RUN mkdir -p /usr/web/broker
 RUN mkdir -p /usr/web/policy
 WORKDIR /usr/web/logstream
