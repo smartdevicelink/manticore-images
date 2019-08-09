@@ -151,6 +151,8 @@ COPY hmi_capabilities.json /usr/build/bin/hmi_capabilities.json
 
 # Replace sdl_preloaded_pt file with a custom made one
 COPY sdl_preloaded_pt.json /usr/build/bin/sdl_preloaded_pt.json
+COPY sdl_preloaded_pt.json /usr/web/policy/pt-default.json
+COPY sdl_preloaded_pt.json /usr/web/policy/pt.json
 
 # Expose the following ports
 #   3001: Expose SDL Core's file system
