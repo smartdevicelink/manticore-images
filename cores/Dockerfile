@@ -56,17 +56,23 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libsqlite3-dev \
         libssl1.0-dev \
         nginx \
-        python \
+        python3 \
+        python3-pip \
         sudo \
         supervisor \
         sqlite3 \
-        git 
+        git
 
 # Download SDL Core from github
 WORKDIR /usr
 
 RUN mkdir /usr/sdl_core
 RUN git clone https://github.com/smartdevicelink/sdl_core.git /usr/sdl_core -b $CORE_VERSION --depth=1
+
+WORKDIR /usr/sdl_core
+RUN git submodule init && git submodule update
+
+WORKDIR /usr
 
 RUN mkdir /usr/build
 
@@ -76,6 +82,8 @@ WORKDIR /usr/build
 # Git needs to be configured now...
 RUN git config --global user.email "anon@mail.com"
 RUN git config --global user.name "Anonymous"
+
+RUN pip3 install xmlschema
 
 # Generate our Makefile, compile it and install
 # Remove everything but what's inside the bin folder of the build directory to save space
