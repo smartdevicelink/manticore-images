@@ -98,16 +98,42 @@ RUN cmake -DBUILD_AVAHI_SUPPORT=$DBUILD_AVAHI_SUPPORT \
     && mv bin /usr/tmpbin \
     && rm -rf * \
     && mv /usr/tmpbin bin 
+
+# A newer version of python is needed
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    zlib1g-dev \
+    libncurses5-dev \
+    libgdbm-dev \
+    libnss3-dev \
+    libssl-dev \
+    libreadline-dev \
+    libffi-dev \
+    wget \
+    libbz2-dev 
+
+# Build new version of Python since apt-get doesn't have the newer versions
+RUN wget -O /usr/python.tgz https://www.python.org/ftp/python/3.7.4/Python-3.7.4.tgz
+RUN tar -xf /usr/python.tgz -C /usr
+
+WORKDIR /usr/Python-3.7.4
+
+RUN /usr/Python-3.7.4/configure --enable-optimizations
+RUN make
+RUN make install
+RUN pip3 install requests
     
 RUN mkdir -p /usr/web/logstream 
 RUN mkdir -p /usr/web/broker
 RUN mkdir -p /usr/web/policy
+RUN mkdir -p /usr/web/store
+RUN mkdir -p /usr/web/python
 WORKDIR /usr/web/logstream
 
 # Copy node and npm files
 COPY logstream /usr/web/logstream/
 COPY broker /usr/web/broker/
 COPY policy /usr/web/policy/
+COPY store /usr/web/store/
 
 # Install nvm
 RUN curl -sL https://raw.githubusercontent.com/creationix/nvm/v0.31.0/install.sh -o install_nvm.sh
@@ -130,6 +156,13 @@ RUN /bin/bash -c "source /root/.bashrc; \
 WORKDIR /usr/web/policy
 RUN /bin/bash -c "source /root/.bashrc; \
     npm install"
+
+WORKDIR /usr/web/store
+RUN /bin/bash -c "source /root/.bashrc; \
+    npm install"
+
+# Grab specifically the python server contents from the generic HMI repository
+RUN git clone https://github.com/smartdevicelink/generic_hmi.git /usr/web/python -b master --depth=1 --recurse-submodules
 
 # Directory to run commands in
 WORKDIR /usr/build/bin
@@ -171,7 +204,9 @@ COPY sdl_preloaded_pt.json /usr/web/policy/pt.json
 #   8888: Expose websocket port for core log streaming
 #   9000: Websocket connection to the broker
 #   9898: Expose miniature policy server port
-EXPOSE 3001 12345 5050 5080 8090 8888 9000 9898
+#   2020: Expose websocket server
+#   3000: Expose app store server
+EXPOSE 3001 12345 5050 5080 8090 8888 9000 9898 2020 3000
 
 # Run the start script that will launch SDL Core!
 CMD ["/bin/bash", "setup.sh"]
