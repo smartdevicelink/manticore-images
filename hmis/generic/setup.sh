@@ -30,12 +30,16 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 
-echo "Changing Flags.js Broker ServerAddress to ${BROKER_ADDR}"
+echo "Changing Controller.js Broker ServerAddress to ${BROKER_ADDR}"
 echo "Changing Nginx file proxy address to ${CORE_FILE_ADDR}"
-# Replace IP and Port in Controller file with the address to the broker
+echo "Changing Python server address to ${PYTHON_ADDRESS}"
+
+# Replace IP and Port in Controller file with the address to the broker. Must edit the bundle file to avoid having to rebuild
 # The address for the broker is REQUIRED to include the protocol (ex. ws://localhost:80)
-perl -pi -e "s/ws:\/\/localhost:8087/$BROKER_ADDR/g" /usr/app/webapp/build/bundle.js
+perl -pi -e "s/'ws:\/\/' \+ _Flags.flags.CoreHost \+ ':' \+ _Flags.flags.CorePort/'$BROKER_ADDR'/g" /usr/app/webapp/build/bundle.js
+# Change to the correct python websocket server address
+perl -pi -e "s/ws:\/\/127.0.0.1:8081/${PYTHON_ADDRESS}/g" /usr/app/webapp/build/bundle.js
 # Replace XXXXX in the nginx conf file with the address of sdl_core
 perl -pi -e "s/XXXXX/$CORE_FILE_ADDR/g" /etc/nginx/nginx.conf
-# Start nginx
+#Start nginx
 /usr/sbin/nginx

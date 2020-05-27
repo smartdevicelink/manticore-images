@@ -48,27 +48,34 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     libpng-dev \
     python \
+    ca-certificates \
     nginx 
 
 # Download Generic HMI from github 
 
 RUN mkdir -p /usr/app/webapp
-RUN git clone https://github.com/smartdevicelink/generic_hmi.git /usr/app/webapp -b $HMI_VERSION --depth=1
+RUN git clone https://github.com/smartdevicelink/generic_hmi.git /usr/app/webapp -b $HMI_VERSION --depth=1 --recurse-submodules
 
 WORKDIR /usr/app/webapp
 
 # Install dependencies and run webpack so we can guarantee the bundle.js file exists
 # Remove everything but the build/bundle.js file and the index.html file
 RUN npm install \
-	&& npm rebuild node-sass \
-	&& ./node_modules/webpack/bin/webpack.js \
-	&& mv build /usr/app/tmpbuild \
-	&& mv index.html /usr/app/tmpindex.html \
-	&& mv fonts /usr/app/tmpfonts \
-	&& rm -rf * \
-	&& mv /usr/app/tmpbuild build \
-	&& mv /usr/app/tmpindex.html index.html \
-	&& mv /usr/app/tmpfonts fonts 
+    && npm rebuild node-sass \
+    && ./node_modules/webpack/bin/webpack.js \
+    && mv build /usr/app/tmpbuild \
+    && mv index.html /usr/app/tmpindex.html \
+    && mv fonts /usr/app/tmpfonts \
+    && mv python_websocket /usr/app/tmp_python_websocket \
+    && mv deploy_server.sh /usr/app/tmp_deploy_server.sh \
+    && mv tools /usr/app/tmptools \
+    && rm -rf * \
+    && mv /usr/app/tmpbuild build \
+    && mv /usr/app/tmpindex.html index.html \
+    && mv /usr/app/tmpfonts fonts \
+    && mv /usr/app/tmp_python_websocket python_websocket \
+    && mv /usr/app/tmp_deploy_server.sh deploy_server.sh \
+    && mv /usr/app/tmptools tools 
 
 # Copy SDL Core start script into container
 COPY setup.sh setup.sh
@@ -84,7 +91,8 @@ RUN ldconfig
 
 # Expose the following ports
 #   8080:  Returns index.html of HMI
-EXPOSE 8080
+#   8081:  The python websocket server
+EXPOSE 8080 8081
 
 # Run nginx
 CMD ["/bin/bash", "setup.sh"]
