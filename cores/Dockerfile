@@ -70,6 +70,11 @@ RUN mkdir /usr/sdl_core
 RUN git clone https://github.com/smartdevicelink/sdl_core.git /usr/sdl_core -b $CORE_VERSION --depth=1
 
 WORKDIR /usr/sdl_core
+
+# Git needs to be configured now...
+RUN git config --global user.email "anon@mail.com"
+RUN git config --global user.name "Anonymous"
+
 RUN git submodule init && git submodule update
 
 WORKDIR /usr
@@ -78,10 +83,6 @@ RUN mkdir /usr/build
 
 # Work inside the build folder
 WORKDIR /usr/build
-
-# Git needs to be configured now...
-RUN git config --global user.email "anon@mail.com"
-RUN git config --global user.name "Anonymous"
 
 RUN pip3 install xmlschema
 
@@ -206,7 +207,8 @@ COPY sdl_preloaded_pt.json /usr/web/policy/pt.json
 #   9898: Expose miniature policy server port
 #   2020: Expose websocket server
 #   3000: Expose app store server
-EXPOSE 3001 12345 5050 5080 8090 8888 9000 9898 2020 3000
+#   8081: Expose HMI python server
+EXPOSE 3001 12345 5050 5080 8090 8888 9000 9898 2020 3000 8081
 
 # Run the start script that will launch SDL Core!
 CMD ["/bin/bash", "setup.sh"]

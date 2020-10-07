@@ -62,20 +62,20 @@ WORKDIR /usr/app/webapp
 # Remove everything but the build/bundle.js file and the index.html file
 RUN npm install \
     && npm rebuild node-sass \
-    && ./node_modules/webpack/bin/webpack.js \
+    && npm run build \
     && mv build /usr/app/tmpbuild \
-    && mv index.html /usr/app/tmpindex.html \
     && mv fonts /usr/app/tmpfonts \
     && mv python_websocket /usr/app/tmp_python_websocket \
     && mv deploy_server.sh /usr/app/tmp_deploy_server.sh \
     && mv tools /usr/app/tmptools \
+    && mv public /usr/app/tmppublic \
     && rm -rf * \
     && mv /usr/app/tmpbuild build \
-    && mv /usr/app/tmpindex.html index.html \
     && mv /usr/app/tmpfonts fonts \
     && mv /usr/app/tmp_python_websocket python_websocket \
     && mv /usr/app/tmp_deploy_server.sh deploy_server.sh \
-    && mv /usr/app/tmptools tools 
+    && mv /usr/app/tmptools tools \
+    && mv /usr/app/tmppublic public 
 
 # Copy SDL Core start script into container
 COPY setup.sh setup.sh
