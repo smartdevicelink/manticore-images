@@ -38,7 +38,7 @@ BROKER_NO_PROTOCOL=$(echo ${BROKER_ADDR} | cut -d/ -f3)
 BROKER_HOST=$(echo ${BROKER_NO_PROTOCOL} | cut -d: -f1)
 BROKER_PORT=$(echo ${BROKER_NO_PROTOCOL} | cut -d: -f2)
 
-perl -pi -e "s/PTUWithModemEnabled : false/PTUWithModemEnabled : true/g" /usr/app/webapp/build/Flags.js
+# perl -pi -e "s/PTUWithModemEnabled : false/PTUWithModemEnabled : true/g" /usr/app/webapp/build/Flags.js
 
 # Replace IP and Port in Controller file with the address to the broker.
 # The address for the broker is REQUIRED to include the protocol (ex. ws://localhost:80)
