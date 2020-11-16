@@ -396,6 +396,8 @@
                         "myKey",
                         "prndl",
                         "rpm",
+                        "gearStatus",
+                        "handsOffSteering",
                         "steeringWheelAngle"]
                     },
                     "OnVehicleData": {
@@ -409,6 +411,8 @@
                         "myKey",
                         "prndl",
                         "rpm",
+                        "gearStatus",
+                        "handsOffSteering",
                         "steeringWheelAngle"]
                     },
                     "SubscribeVehicleData": {
@@ -422,6 +426,8 @@
                         "myKey",
                         "prndl",
                         "rpm",
+                        "gearStatus",
+                        "handsOffSteering",
                         "steeringWheelAngle"]
                     },
                     "UnsubscribeVehicleData": {
@@ -435,6 +441,8 @@
                         "myKey",
                         "prndl",
                         "rpm",
+                        "gearStatus",
+                        "handsOffSteering",
                         "steeringWheelAngle"]
                     }
                 }
@@ -461,7 +469,9 @@
                         "odometer",
                         "tirePressure",
                         "vin",
-                        "wiperStatus"]
+                        "wiperStatus",
+                        "stabilityControlsStatus",
+                        "windowStatus"]
                     },
                     "OnVehicleData": {
                         "hmi_levels": ["BACKGROUND",
@@ -482,7 +492,9 @@
                         "odometer",
                         "tirePressure",
                         "vin",
-                        "wiperStatus"]
+                        "wiperStatus",
+                        "stabilityControlsStatus",
+                        "windowStatus"]
                     },
                     "SubscribeVehicleData": {
                         "hmi_levels": ["BACKGROUND",
@@ -502,7 +514,9 @@
                         "cloudAppVehicleID",
                         "odometer",
                         "tirePressure",
-                        "wiperStatus"]
+                        "wiperStatus",
+                        "stabilityControlsStatus",
+                        "windowStatus"]
                     },
                     "UnsubscribeVehicleData": {
                         "hmi_levels": ["BACKGROUND",
@@ -522,7 +536,9 @@
                         "cloudAppVehicleID",
                         "odometer",
                         "tirePressure",
-                        "wiperStatus"]
+                        "wiperStatus",
+                        "stabilityControlsStatus",
+                        "windowStatus"]
                     }
                 }
             },
