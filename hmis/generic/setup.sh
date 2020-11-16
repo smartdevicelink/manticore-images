@@ -34,6 +34,7 @@ echo "Changing Controller.js Broker ServerAddress to ${BROKER_ADDR}"
 echo "Changing Nginx file proxy address to ${CORE_FILE_ADDR}"
 echo "Changing Python server address to ${PYTHON_ADDRESS}"
 
+BROKER_PROTOCOL=$(echo ${BROKER_ADDR} | cut -d: -f1)
 BROKER_NO_PROTOCOL=$(echo ${BROKER_ADDR} | cut -d/ -f3)
 BROKER_HOST=$(echo ${BROKER_NO_PROTOCOL} | cut -d: -f1)
 BROKER_PORT=$(echo ${BROKER_NO_PROTOCOL} | cut -d: -f2)
@@ -44,6 +45,7 @@ BROKER_PORT=$(echo ${BROKER_NO_PROTOCOL} | cut -d: -f2)
 # The address for the broker is REQUIRED to include the protocol (ex. ws://localhost:80)
 perl -pi -e "s/CoreHost: '127.0.0.1'/CoreHost: '$BROKER_HOST'/g" /usr/app/webapp/build/Flags.js
 perl -pi -e "s/CorePort: 8087/CorePort: $BROKER_PORT/g" /usr/app/webapp/build/Flags.js
+perl -pi -e "s/CoreProtocol: 'ws'/CoreProtocol: '$BROKER_PROTOCOL'/g" /usr/app/webapp/build/Flags.js
 # Change to the correct python websocket server address
 perl -pi -e "s/ws:\/\/127.0.0.1:8081/${PYTHON_ADDRESS}/g" /usr/app/webapp/build/Flags.js
 # Replace XXXXX in the nginx conf file with the address of sdl_core

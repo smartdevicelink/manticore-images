@@ -48,7 +48,7 @@ perl -pi -e 's/ALL, SmartDeviceLinkCoreLogFile/ALL, SmartDeviceLinkCoreLogFile/g
 perl -pi -e "s/localhost:8087/$DOCKER_IP:8087/g" /usr/web/broker/index.js
 
 # this environment will not work if using 'localhost': set to Python's None to allow all interfaces and not just localhost
-perl -pi -e "s/'localhost'/None/g" /usr/web/python/tools/start_server.py
+perl -pi -e "s/args.host, args.port/None, 8081/g" /usr/web/python/tools/start_server.py
 cp /usr/web/python/tools/start_server.py /usr/web/python/python_websocket/src/
 
 #Start supervisord
