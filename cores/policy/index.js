@@ -91,6 +91,9 @@ router.post('/api/v1/cloud', async (ctx, next) => {
 
     let table = JSON.parse(await readFile(ptPath))
     const appPolicyObj = createAppPolicyObj(input, input.endpoint.startsWith("wss"))
+    if (appPolicyObj.nicknames.length === 0) {
+        delete appPolicyObj.nicknames;
+    }
 
     //write the new object to the table and save it
     table.policy_table.app_policies[input.app_id] = appPolicyObj
