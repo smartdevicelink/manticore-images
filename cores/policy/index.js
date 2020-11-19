@@ -124,7 +124,9 @@ router.delete('/api/v1/cloud', async (ctx, next) => {
     let table = JSON.parse(await readFile(ptPath))
 
     //disable the app id from the table
-    table.policy_table.app_policies[app_id] = null
+    if (table.policy_table.app_policies[app_id]) {
+        table.policy_table.app_policies[app_id].enabled = false;
+    }
 
     await writeFile(ptPath, JSON.stringify(table, null, 4))
     await writeFile(ptOutPath, JSON.stringify(table, null, 4))
