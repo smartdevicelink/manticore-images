@@ -162,6 +162,9 @@ WORKDIR /usr/web/store
 RUN /bin/bash -c "source /root/.bashrc; \
     npm install"
 
+# Increase file descriptor limit from default of 1024
+RUN ulimit -n 2048
+
 # Grab specifically the python server contents from the generic HMI repository
 RUN git clone https://github.com/smartdevicelink/generic_hmi.git /usr/web/python -b master --depth=1 --recurse-submodules
 
