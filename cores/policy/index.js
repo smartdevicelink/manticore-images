@@ -52,6 +52,26 @@ router.get('/', async (ctx, next) => {
     ctx.response.status = 200
 })
 
+// Update the 0x07 endpoint value
+router.put('/host', async (ctx, next) => {
+    let table = JSON.parse(await readFile(ptPath))
+    if (ctx.request.body.host) {
+        if (ctx.request.body.isFullAddress) { // a custom url is used. Pass it in unchanged 
+            table.policy_table.module_config.endpoints['0x07'].default[0] = `${ctx.request.body.host}`;
+        } else { // just the host is defined (used when referring to this server). append the route at the end
+            table.policy_table.module_config.endpoints['0x07'].default[0] = `${ctx.request.body.host}/api/v1/production/policy`;
+        }
+    }
+    
+    await writeFile(ptPath, JSON.stringify(table, null, 4));
+    await writeFile(ptOutPath, JSON.stringify(table, null, 4));
+
+    ctx.response.body = {
+        ptLocation: ptOutPath
+    }
+    ctx.response.status = 200
+})
+
 //SDL Core hits this endpoint
 router.post('/api/v1/production/policy', async (ctx, next) => {
     let table = JSON.parse(await readFile(ptPath))
