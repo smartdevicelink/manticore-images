@@ -164,6 +164,7 @@ RUN /bin/bash -c "source /root/.bashrc; \
 
 # Grab specifically the python server contents from the generic HMI repository
 RUN git clone https://github.com/smartdevicelink/generic_hmi.git /usr/web/python -b master --depth=1 --recurse-submodules
+COPY start_server.py /usr/web/python/tools/start_server.py
 
 # Directory to run commands in
 WORKDIR /usr/build/bin
