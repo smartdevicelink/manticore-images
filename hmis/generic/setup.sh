@@ -48,6 +48,7 @@ perl -pi -e "s/CorePort: 8087/CorePort: $BROKER_PORT/g" /usr/app/webapp/build/Fl
 perl -pi -e "s/CoreProtocol: 'ws'/CoreProtocol: '$BROKER_PROTOCOL'/g" /usr/app/webapp/build/Flags.js
 # Change to the correct python websocket server address
 perl -pi -e "s/ws:\/\/127.0.0.1:8081/${PYTHON_ADDRESS}/g" /usr/app/webapp/build/Flags.js
+perl -pi -e "s/'https:\/\/sdl-webengine-app-store-example.s3.amazonaws.com\/app-directory.json'/''/g" /usr/app/webapp/build/Flags.js
 # Replace XXXXX in the nginx conf file with the address of sdl_core
 perl -pi -e "s/XXXXX/$CORE_FILE_ADDR/g" /etc/nginx/nginx.conf
 #Start nginx
