@@ -52,6 +52,8 @@ router.get('/', async (ctx, next) => {
     ctx.response.status = 200
 })
 
+let appsRequestingWebView = [];
+
 // Update the 0x07 endpoint value
 router.put('/host', async (ctx, next) => {
     let table = JSON.parse(await readFile(ptPath))
@@ -78,7 +80,11 @@ router.post('/api/v1/production/policy', async (ctx, next) => {
     if (ctx.request.body.policy_table && ctx.request.body.policy_table.app_policies) {
         for (let appId in ctx.request.body.policy_table.app_policies) {
             if (appId !== "default" && appId !== "device" && appId !== "pre_DataConsent") {
-                table.policy_table.app_policies[appId] = "default"
+                if (appsRequestingWebView.includes(appId)) {
+                    table.policy_table.app_policies[appId] = webViewPolicyObj;
+                } else {
+                    table.policy_table.app_policies[appId] = "default";
+                }
             }
         }
     }
@@ -157,6 +163,53 @@ router.delete('/api/v1/cloud', async (ctx, next) => {
     }
 })
 
+// the Manticore UI hits this endpoint
+// Adds an app to the list of apps requesting the WEB_VIEW HMI Type
+router.post('/api/v1/webview', async (ctx, next) => {
+    const { body } = ctx.request;
+
+    if (body.app_id && body.hasWebView) {
+        // The app wants WEB_VIEW, add it to the list
+        appsRequestingWebView.push(body.app_id);
+    } else {
+        // The app doesn't want WEB_VIEW or wants it removed, make sure it isn't in the list
+        appsRequestingWebView = appsRequestingWebView.filter((id) => {
+            return id !== body.app_id;
+        });
+    }
+    ctx.response.status = 200
+});
+
+const webViewPolicyObj = {
+    "keep_context": false,
+    "steal_focus": false,
+    "priority": "EMERGENCY",
+    "default_hmi": "NONE",
+    "groups": ["Base-4", "Location-1", "Notifications", "Notifications-RC", "DrivingCharacteristics-3", "VehicleInfo-3", "PropriataryData-1", "PropriataryData-2", "ProprietaryData-3", "CloudAppStore", "CloudApp", "AppServiceProvider", "AppServiceConsumer", "RemoteControl", "Emergency-1", "Navigation-1", "Base-6", "OnKeyboardInputOnlyGroup", "OnTouchEventOnlyGroup", "DiagnosticMessageOnly", "DataConsent-2", "BaseBeforeDataConsent", "SendLocation", "WayPoints", "BackgroundAPT", "HapticGroup", "WidgetSupport"],
+    "moduleType": ["CLIMATE", "RADIO", "SEAT", "AUDIO", "LIGHT", "HMI_SETTINGS"],
+    "RequestType": [],
+    "RequestSubType": [],
+    "AppHMIType": ["DEFAULT", "COMMUNICATION", "MEDIA", "MESSAGING", "NAVIGATION", "INFORMATION", "SOCIAL", "BACKGROUND_PROCESS", "TESTING", "SYSTEM", "PROJECTION", "REMOTE_CONTROL", "WEB_VIEW"],
+    "app_services": {
+        "MEDIA": {
+            "handled_rpcs": [
+                { "function_id": 41 }
+            ]
+        },
+        "NAVIGATION": {
+            "handled_rpcs": [
+                { "function_id": 39 },  
+                { "function_id": 45 },  
+                { "function_id": 46 },  
+                { "function_id": 32784 }
+            ]
+        },
+        "WEATHER": {
+            "handled_rpcs": [
+            ]
+        }
+    }
+}
 
 function createAppPolicyObj (cloudPost, isSecure) {
     return {
@@ -192,7 +245,7 @@ function createAppPolicyObj (cloudPost, isSecure) {
                 "handled_rpcs": [
                 ]
             }
-        }   
+        }
     }
 }
 
