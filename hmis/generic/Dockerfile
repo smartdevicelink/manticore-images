@@ -34,7 +34,7 @@
 # ##################################################################################################
 
 # This image has node and npm preinstalled
-FROM node:10.15.3-stretch-slim
+FROM node:12.22-stretch-slim
 
 MAINTAINER Chris Rokita version:1.0
 
@@ -63,19 +63,7 @@ WORKDIR /usr/app/webapp
 RUN npm install \
     && npm rebuild node-sass \
     && npm run build \
-    && mv build /usr/app/tmpbuild \
-    && mv fonts /usr/app/tmpfonts \
-    && mv python_websocket /usr/app/tmp_python_websocket \
-    && mv deploy_server.sh /usr/app/tmp_deploy_server.sh \
-    && mv tools /usr/app/tmptools \
-    && mv public /usr/app/tmppublic \
-    && rm -rf * \
-    && mv /usr/app/tmpbuild build \
-    && mv /usr/app/tmpfonts fonts \
-    && mv /usr/app/tmp_python_websocket python_websocket \
-    && mv /usr/app/tmp_deploy_server.sh deploy_server.sh \
-    && mv /usr/app/tmptools tools \
-    && mv /usr/app/tmppublic public 
+    && rm -rf node_modules 
 
 # Copy SDL Core start script into container
 COPY setup.sh setup.sh

@@ -33,8 +33,7 @@
 # Basic docker build of SDL Core for use with Manticore:  https://github.com/smartdevicelink/sdl_core
 # ##################################################################################################
 
-# This image is based of debian
-FROM buildpack-deps:stretch
+FROM ubuntu:18.04
 
 MAINTAINER Chris Rokita version:1.0
 
@@ -54,13 +53,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         cmake \
         libudev-dev \
         libsqlite3-dev \
-        libssl1.0-dev \
+        libssl-dev \
+        libssl1.1 \
         nginx \
         python3 \
         python3-pip \
         sudo \
         supervisor \
         sqlite3 \
+        openssl \
+        curl \
         git
 
 # Download SDL Core from github
@@ -84,8 +86,6 @@ RUN mkdir /usr/build
 # Work inside the build folder
 WORKDIR /usr/build
 
-RUN pip3 install xmlschema
-
 # Generate our Makefile, compile it and install
 # Remove everything but what's inside the bin folder of the build directory to save space
 RUN cmake -DBUILD_AVAHI_SUPPORT=$DBUILD_AVAHI_SUPPORT \
@@ -99,30 +99,14 @@ RUN cmake -DBUILD_AVAHI_SUPPORT=$DBUILD_AVAHI_SUPPORT \
     && mv bin /usr/tmpbin \
     && rm -rf * \
     && mv /usr/tmpbin bin 
-
-# A newer version of python is needed
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    zlib1g-dev \
-    libncurses5-dev \
-    libgdbm-dev \
-    libnss3-dev \
-    libssl-dev \
-    libreadline-dev \
-    libffi-dev \
-    wget \
-    libbz2-dev 
-
-# Build new version of Python since apt-get doesn't have the newer versions
-RUN wget -O /usr/python.tgz https://www.python.org/ftp/python/3.7.4/Python-3.7.4.tgz
-RUN tar -xf /usr/python.tgz -C /usr
-
-WORKDIR /usr/Python-3.7.4
-
-RUN /usr/Python-3.7.4/configure --enable-optimizations
-RUN make
-RUN make install
-RUN pip3 install requests
     
+# Install extra libraries
+RUN apt-get install -y --no-install-recommends \
+    libexpat1 \
+    libexpat1-dev
+
+RUN pip3 install requests
+
 RUN mkdir -p /usr/web/logstream 
 RUN mkdir -p /usr/web/broker
 RUN mkdir -p /usr/web/policy
@@ -137,29 +121,34 @@ COPY policy /usr/web/policy/
 COPY store /usr/web/store/
 
 # Install nvm
-RUN curl -sL https://raw.githubusercontent.com/creationix/nvm/v0.31.0/install.sh -o install_nvm.sh
-RUN bash install_nvm.sh
-RUN /bin/bash -c "source /root/.bashrc; \
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+
+RUN echo 'export NVM_DIR="$HOME/.nvm"'                                       >> "$HOME/.bashrc"
+RUN echo '[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm' >> "$HOME/.bashrc"
+RUN echo '[ -s "$NVM_DIR/bash_completion" ] && . "$NVM_DIR/bash_completion" # This loads nvm bash_completion' >> "$HOME/.bashrc"
+
+# snippet from https://github.com/nvm-sh/nvm/blob/master/Dockerfile
+RUN bash -c 'source $HOME/.nvm/nvm.sh   && \
     nvm install v8.11.1 \
     nvm use v8.11.1 \
-    nvm alias default v8.11.1"
+    nvm alias default v8.11.1'
 
 # Install dependencies
 
 WORKDIR /usr/web/logstream
-RUN /bin/bash -c "source /root/.bashrc; \
+RUN bash -c "source $HOME/.nvm/nvm.sh   && \
     npm install"
 
 WORKDIR /usr/web/broker
-RUN /bin/bash -c "source /root/.bashrc; \
+RUN bash -c "source $HOME/.nvm/nvm.sh   && \
     npm install"
 
 WORKDIR /usr/web/policy
-RUN /bin/bash -c "source /root/.bashrc; \
+RUN bash -c "source $HOME/.nvm/nvm.sh   && \
     npm install"
 
 WORKDIR /usr/web/store
-RUN /bin/bash -c "source /root/.bashrc; \
+RUN bash -c "source $HOME/.nvm/nvm.sh   && \
     npm install"
 
 # Grab specifically the python server contents from the generic HMI repository
