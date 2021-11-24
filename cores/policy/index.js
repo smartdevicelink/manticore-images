@@ -82,7 +82,7 @@ router.post('/api/v1/production/policy', async (ctx, next) => {
             if (appId !== "default" && appId !== "device" && appId !== "pre_DataConsent") {
                 if (appsRequestingWebView.includes(appId)) {
                     table.policy_table.app_policies[appId] = webViewPolicyObj;
-                } else {
+                } else if (!table.policy_table.app_policies[appId]) { // the policy object for the app could already exist if it is a cloud app
                     table.policy_table.app_policies[appId] = "default";
                 }
             }
