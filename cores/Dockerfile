@@ -155,6 +155,10 @@ RUN bash -c "source $HOME/.nvm/nvm.sh   && \
 RUN git clone https://github.com/smartdevicelink/generic_hmi.git /usr/web/python -b master --depth=1 --recurse-submodules
 COPY start_server.py /usr/web/python/tools/start_server.py
 
+# Extra imports needed for the python server
+RUN apt-get install ffmpeg -y --no-install-recommends
+RUN pip3 install ffmpeg-python pexpect pyopenssl
+
 # Directory to run commands in
 WORKDIR /usr/build/bin
 

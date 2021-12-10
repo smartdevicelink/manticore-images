@@ -34,6 +34,7 @@ import websockets
 import json
 import os
 import requests
+import base64
 from zipfile import ZipFile
 import subprocess
 import uuid
@@ -43,16 +44,21 @@ import socketserver
 from http.server import SimpleHTTPRequestHandler
 import threading
 import argparse
+import ffmpeg
+import pexpect.fdpexpect
+import OpenSSL.crypto as crypto
 
 class Flags():
   """Used to define global properties"""
   FILE_SERVER_HOST = '127.0.0.1'
   FILE_SERVER_PORT = 4000
   FILE_SERVER_URI = 'http://127.0.0.1:4000'
+  VIDEO_SERVER_PORT = 8085
+  AUDIO_SERVER_PORT = 8086
 
 class WebengineFileServer():
   """Used to handle routing file server requests for webengine apps.
-  
+
   Routes are added/removed via the add_app_mapping/remove_app_mapping functions
   """
   def __init__(self, _host, _port, _uri=None):
@@ -92,13 +98,13 @@ class WebengineFileServer():
       def end_headers(self):
         self.send_header('Access-Control-Allow-Origin', '*')
         super().end_headers()
-        
+
       def do_GET(self):
         path_parts = self.path.split('/')
         key = path_parts[1]
-        file_path = '/'.join(path_parts[2:])  
+        file_path = '/'.join(path_parts[2:])
 
-        # Check if the secret key is valid 
+        # Check if the secret key is valid
         if key not in app_dir_mapping:
           super().send_error(403, "Using invalid key %s" % key)
           return
@@ -118,17 +124,17 @@ class WebengineFileServer():
 
 class WSServer():
   """Used to create a Websocket Connection with the HMI.
-  
+
   Has a SampleRPCService class to handle incoming and outgoing messages.
   """
   def __init__(self, _host, _port, _service_class=None):
     self.HOST = _host
     self.PORT = _port
     self.service_class = _service_class if _service_class != None else WSServer.SampleRPCService
-    
+
   async def serve(self, _stop_func):
     async with websockets.serve(self.on_connect, self.HOST, self.PORT):
-      await _stop_func      
+      await _stop_func
 
   def start_server(self):
     loop = asyncio.get_event_loop()
@@ -139,34 +145,36 @@ class WSServer():
     loop.add_signal_handler(signal.SIGINT, stop.set_result, None)
 
     # Run the server until the stop condition is met.
-    loop.run_until_complete(self.serve(stop))
+    try:
+      loop.run_until_complete(self.serve(stop))
+    finally:
+      loop.close()
 
   async def on_connect(self, _websocket, _path):
       print('\033[1;2mClient %s connected\033[0m' % str(_websocket.remote_address))
       rpc_service = self.service_class(_websocket, _path)
-  
-      async for message in _websocket:
-        await rpc_service.on_receive(message)
-  
+
+      try:
+        async for message in _websocket:
+          await rpc_service.on_receive(message)
+      except websockets.exceptions.ConnectionClosedError as err:
+        print('\033[31;1;2mClient %s unexpected disconnect: "%s"\033[0m' % (str(_websocket.remote_address), str(err)))
+
   class SampleRPCService():
     def __init__(self, _websocket, _path):
       print('\033[1;2mCreated RPC service\033[0m')
       self.websocket = _websocket
       self.path = _path
-    
-    async def on_receive(self, _msg):
-      print('\033[1;2mMessage received: %s\033[0m' % _msg)
 
 class RPCService(WSServer.SampleRPCService):
   """Used to handle receiving RPC requests and send RPC responses.
-  
+
   An implementation of the SampleRPCService class. RPC requests are handled in the `handle_*` functions.
   """
   webengine_manager = None
 
   def __init__(self, _websocket, _path):
     super().__init__(_websocket, _path)
-
     if RPCService.webengine_manager is None:
       RPCService.webengine_manager = WebEngineManager()
     self.rpc_mapping = {
@@ -175,27 +183,29 @@ class RPCService(WSServer.SampleRPCService):
       "InstallApp": RPCService.webengine_manager.handle_install_app,
       "GetInstalledApps": RPCService.webengine_manager.handle_get_installed_apps,
       "UninstallApp": RPCService.webengine_manager.handle_uninstall_app,
+      "StartVideoStream": self.handle_start_video_stream,
+      "StartAudioStream": self.handle_start_audio_stream,
+      "DecryptCertificate": self.handle_decrypt_certificate
     }
 
   async def send(self, _msg):
     print('\033[1;2m***Sending message: %s\033[0m' % _msg)
     await self.websocket.send(_msg)
-  
+
   async def send_error(self, _error_msg):
     err = self.gen_error_msg(_error_msg)
     print(json.dumps(err))
     await self.send(json.dumps(err))
 
   async def on_receive(self, _msg):
-    print('\033[1;2m***Message received: %s\033[0m' % _msg)
     request_message = None
-    
+
     try:
       request_message = json.loads(_msg)
     except ValueError as err:
       await self.send_error('Invalid JSON received: %s' % err)
       return
-    
+
     if 'method' not in request_message:
       await self.send_error('Received message does not contain manadatory field \'method\'')
       return
@@ -218,6 +228,7 @@ class RPCService(WSServer.SampleRPCService):
     return self.rpc_mapping[_method_name](_method_name, _params)
 
   def handle_get_pts_file_content(self, _method_name, _params):
+
     if 'fileName' not in _params:
       return self.gen_error_msg('Missing mandatory param \'fileName\'')
 
@@ -235,7 +246,6 @@ class RPCService(WSServer.SampleRPCService):
     }
 
   def handle_save_ptu_to_file(self, _method_name, _params):
-
     if 'fileName' not in _params:
       return self.gen_error_msg('Missing mandatory param \'fileName\'')
     if 'content' not in _params:
@@ -244,19 +254,103 @@ class RPCService(WSServer.SampleRPCService):
     file_name = _params["fileName"]
     content = json.loads(_params["content"])
 
+    # Validate file path
+    def isFileNameValid(_file_name):
+      path = os.path.abspath(os.path.normpath(_file_name))
+      return True
+
+    if not isFileNameValid(file_name):
+      return self.gen_error_msg('Invalid file name: %s. Cannot save PTU' % file_name)
+
     try:
-      r = open(file_name, 'w')
-      r.write(_params["content"])
-      r.close()
-      #json_file = open(file_name, 'w')
-      #json.dump(content, json_file)
-      #json_file.close()
+      json_file = open(file_name, 'w')
+      json.dump(content, json_file)
     except:
       return self.gen_error_msg('Failed to save PTU file %s' % file_name)
 
     return {
       "success": True
     }
+
+  def handle_start_video_stream(self, _method, _params):
+    if 'url' not in _params:
+      return self.gen_error_msg('Missing mandatory param \'url\'')
+
+    if 'config' not in _params:
+      return self.gen_error_msg('Missing mandatory param \'config\'')
+
+    if 'webm' not in _params:
+      return self.gen_error_msg('Missing mandatory param \'webm\'')
+
+    if _params['config'].get('protocol') == 'RTP':
+      print('\033[33mSDL does not support RTP video in browser\033[0m')
+      if _params['config'].get('codec') == 'H264':
+        print('\033[1mYou may view your video with gstreamer:\033[0m')
+        print('gst-launch-1.0 souphttpsrc location=' + _params['url'] + ' ! "application/x-rtp-stream" ! rtpstreamdepay ! "application/x-rtp,media=(string)video,clock-rate=90000,encoding-name=(string)H264" ! rtph264depay ! "video/x-h264, stream-format=(string)avc, alignment=(string)au" ! avdec_h264 ! videoconvert ! ximagesink sync=false')
+
+    elif not _params['webm']:
+      print('\033[33mYour browser does not support WEBM video\033[0m')
+      if _params['config'].get('protocol') == 'RAW' and _params['config'].get('codec') == 'H264':
+        print('\033[1mYou may view your video with gstreamer:\033[0m')
+        print('gst-launch-1.0 souphttpsrc location=' + _params['url'] + ' ! decodebin ! videoconvert ! xvimagesink sync=false')
+
+    else:
+      server_endpoint = 'http://' + Flags.FILE_SERVER_HOST + ':' + str(Flags.VIDEO_SERVER_PORT)
+      ffmpeg_process = ffmpeg.input(_params['url']).output(server_endpoint, vcodec='vp8', format='webm', listen=1, multiple_requests=1).run_async(pipe_stderr=True)
+      o = pexpect.fdpexpect.fdspawn(ffmpeg_process.stderr.fileno(), logfile=sys.stdout.buffer)
+      index = o.expect(["Input", pexpect.EOF, pexpect.TIMEOUT])
+
+      if index != 0:
+        return self.gen_error_msg('Streaming data not available from SDL')
+      return { 'success': True, 'params': { 'endpoint': server_endpoint } }
+
+    return { 'success': True }
+
+  def handle_start_audio_stream(self, _method, _params):
+    if 'url' not in _params:
+      return self.gen_error_msg('Missing mandatory param \'url\'')
+
+    server_endpoint = 'http://' + Flags.FILE_SERVER_HOST + ':' + str(Flags.AUDIO_SERVER_PORT)
+    ffmpeg_process = ffmpeg.input(_params['url'], ar='16000', ac='1', f='s16le').output(server_endpoint, format="wav", listen=1, multiple_requests=1).run_async(pipe_stderr=True)
+    o = pexpect.fdpexpect.fdspawn(ffmpeg_process.stderr.fileno(), logfile=sys.stdout.buffer)
+    index = o.expect(["Input", pexpect.EOF, pexpect.TIMEOUT])
+
+    if index != 0:
+      return self.gen_error_msg('Streaming data not available from SDL')
+
+    return { 'success': True, 'params': { 'endpoint': server_endpoint } }
+
+  def handle_decrypt_certificate(self, _method_name, _params):
+    if 'fileName' not in _params:
+      return self.gen_error_msg('Missing mandatory param \'fileName\'')
+
+    crt_file_path = _params['fileName']
+    if not os.path.isfile(crt_file_path):
+      return self.gen_error_msg("File does not exist")
+
+    certificate = None
+    private_key = None
+    try:
+      file_contents = open(crt_file_path, 'rb').read()
+      if b"BEGIN CERTIFICATE" in file_contents:
+        return { 'success': True }
+      p12 = crypto.load_pkcs12(base64.b64decode(file_contents),
+        Flags.CERT_PASS_PHRASE.encode('utf-8'))
+      certificate = p12.get_certificate()
+      private_key = p12.get_privatekey()
+    except Exception as e:
+      return RPCService.gen_error_msg('Failed to read from certificate file {0:}'.format(e))
+
+    cert_out = crypto.dump_certificate(crypto.FILETYPE_PEM, certificate).decode()
+    key_out = crypto.dump_privatekey(crypto.FILETYPE_PEM, private_key).decode()
+    try:
+      out_file = open(crt_file_path, 'w')
+      out_file.write(cert_out + key_out)
+      out_file.close()
+    except Exception as e:
+      return RPCService.gen_error_msg('Failed to write to certificate file {0:}'.format(e))
+
+    return { 'success': True }
 
   @staticmethod
   def gen_error_msg(_error_msg):
@@ -265,7 +359,7 @@ class RPCService(WSServer.SampleRPCService):
 class WebEngineManager():
   """Used to specifically handle WebEngine RPCs.
 
-  All the `handle_*` functions parse the RPC requests and the non `handle_*` functions implement 
+  All the `handle_*` functions parse the RPC requests and the non `handle_*` functions implement
   the actual webengine operations(downloading the app zip, creating directories, etc.).
   """
   def __init__(self):
@@ -286,7 +380,7 @@ class WebEngineManager():
       return RPCService.gen_error_msg('Missing manadatory param \'policyAppID\'')
     if 'packageUrl' not in _params:
       return RPCService.gen_error_msg('Missing manadatory param \'packageUrl\'')
-    
+
     resp = self.install_app(_params['policyAppID'], _params['packageUrl'])
     return resp
 
@@ -339,7 +433,7 @@ class WebEngineManager():
     print('\033[2mSecret key is %s\033[0m' % (secret_key))
     self.file_server.add_app_mapping(secret_key, _app_storage_folder)
     return {
-      "key": secret_key, 
+      "key": secret_key,
       "url": '%s/%s/' % (self.file_server.URI, secret_key)
     }
 
@@ -361,10 +455,10 @@ class WebEngineManager():
           "appKey": file_server_info['key']
         }
       apps_info.append({
-        "policyAppID": app_id, 
+        "policyAppID": app_id,
         "appUrl": self.webengine_apps[app_id]['appURL']
       })
-    
+
     return {
       "success": True,
       "params":{
@@ -403,7 +497,10 @@ class WebEngineManager():
 def main():
   parser =  argparse.ArgumentParser(description="Handle backend operations for the hmi")
   parser.add_argument('--host', type=str, required=True, help="Backend server hostname")
-  parser.add_argument('--port', type=int, required=True, help="Backend server port number")
+  parser.add_argument('--ws-port', type=int, required=True, help="Backend server port number")
+  parser.add_argument('--video-port', type=int, default=8085, help="Video streaming server port number")
+  parser.add_argument('--audio-port', type=int, default=8086, help="Audio streaming server port number")
+  parser.add_argument('--cert-passphrase', type=str, default='defaultPassPhrase', help="A secret password used to decrypt the certificate from the PT")
   parser.add_argument('--fs-port', type=int, default=4000, help="File server port number")
   parser.add_argument('--fs-uri', type=str, help="File server's URI (to be sent back to the client hmi)")
 
@@ -411,8 +508,11 @@ def main():
   Flags.FILE_SERVER_HOST = args.host
   Flags.FILE_SERVER_PORT = args.fs_port
   Flags.FILE_SERVER_URI = args.fs_uri if args.fs_uri else 'http://%s:%s' % (Flags.FILE_SERVER_HOST, Flags.FILE_SERVER_PORT)
+  Flags.VIDEO_SERVER_PORT = args.video_port
+  Flags.AUDIO_SERVER_PORT = args.audio_port
+  Flags.CERT_PASS_PHRASE = args.cert_passphrase
 
-  backend_server = WSServer(args.host, args.port, RPCService)
+  backend_server = WSServer(args.host, args.ws_port, RPCService)
 
   print('Starting server')
   backend_server.start_server()
