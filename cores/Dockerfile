@@ -73,11 +73,7 @@ RUN git clone https://github.com/smartdevicelink/sdl_core.git /usr/sdl_core -b $
 
 WORKDIR /usr/sdl_core
 
-# Git needs to be configured now...
-RUN git config --global user.email "anon@mail.com"
-RUN git config --global user.name "Anonymous"
-
-RUN git submodule init && git submodule update
+RUN git submodule init && git submodule update 
 
 WORKDIR /usr
 
@@ -94,7 +90,8 @@ RUN cmake -DBUILD_AVAHI_SUPPORT=$DBUILD_AVAHI_SUPPORT \
     -DEXTENDED_MEDIA_MODE=$DEXTENDED_MEDIA_MODE \
     -DENABLE_HMI_PTU_DECRYPTION=$DENABLE_HMI_PTU_DECRYPTION \
     ../sdl_core \
-    && make \
+    && make install-3rd_party \
+    && make install_python_dependencies \
     && make install \
     && mv bin /usr/tmpbin \
     && rm -rf * \
@@ -157,6 +154,7 @@ COPY start_server.py /usr/web/python/tools/start_server.py
 
 # Extra imports needed for the python server
 RUN apt-get install ffmpeg -y --no-install-recommends
+RUN pip3 install --upgrade pip
 RUN pip3 install ffmpeg-python pexpect pyopenssl
 
 # Directory to run commands in
