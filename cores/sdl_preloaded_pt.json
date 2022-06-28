@@ -1051,6 +1051,13 @@
                             "LIMITED"
                         ]
                     },
+                    "OnTBTClientState": {
+                        "hmi_levels": [
+                            "BACKGROUND",
+                            "FULL",
+                            "LIMITED"
+                        ]
+                    },
                     "ShowConstantTBT": {
                         "hmi_levels": [
                             "BACKGROUND",
