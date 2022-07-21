@@ -102,6 +102,26 @@ const cloudPostSchema = Joi.object().keys({
     nicknames: Joi.array().items(Joi.string()).required()
 })
 
+router.get('/api/v1/cloud', async (ctx, next) => {
+    let table = JSON.parse(await readFile(ptPath))
+    let results = []
+    for (let appId in table.policy_table.app_policies) {
+        if (appId !== "default" && appId !== "device" && appId !== "pre_DataConsent") {
+            let request = {
+                app_id: appId,
+                endpoint: table.policy_table.app_policies[appId].endpoint,
+                auth_token: table.policy_table.app_policies[appId].auth_token,
+                nicknames: table.policy_table.app_policies[appId].nicknames
+            }
+            results.push(request);
+        }
+    }
+    ctx.response.status = 200
+    return ctx.body = {
+        app_policies: results
+    }
+})
+
 //the Manticore UI hits this endpoint
 router.post('/api/v1/cloud', async (ctx, next) => {
     const { body } = ctx.request
