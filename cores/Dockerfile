@@ -33,7 +33,7 @@
 # Basic docker build of SDL Core for use with Manticore:  https://github.com/smartdevicelink/sdl_core
 # ##################################################################################################
 
-FROM ubuntu:18.04
+FROM ubuntu:20.04
 
 MAINTAINER Chris Rokita version:1.0
 
@@ -48,7 +48,9 @@ ENV CORE_NETWORK_INTERFACE eth0
 ENV CORE_VERSION=${CORE_VERSION}
 
 # Install dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update
+RUN DEBIAN_FRONTEND=noninteractive TZ=EtcUTC pat-get -y install tzdata
+RUN apt-get install -y --no-install-recommends \
         build-essential \ 
         cmake \
         libudev-dev \
@@ -58,6 +60,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         nginx \
         python3 \
         python3-pip \
+        python3-setuptools \
+        python3-wheel \
+        python \
         sudo \
         supervisor \
         sqlite3 \
