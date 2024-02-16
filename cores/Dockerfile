@@ -49,7 +49,7 @@ ENV CORE_VERSION=${CORE_VERSION}
 
 # Install dependencies
 RUN apt-get update
-RUN DEBIAN_FRONTEND=noninteractive TZ=EtcUTC pat-get -y install tzdata
+RUN DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get -y install tzdata
 RUN apt-get install -y --no-install-recommends \
         build-essential \ 
         cmake \
