@@ -129,7 +129,7 @@ router.get('/api/v1/cloud', async (ctx, next) => {
 router.post('/api/v1/cloud', async (ctx, next) => {
     const { body } = ctx.request
 
-    const result = Joi.validate(body, cloudPostSchema)
+    const result = cloudPostSchema.validate(body)
     if (result.error) {
         ctx.response.status = 400
         return ctx.body = {
@@ -184,7 +184,7 @@ const cloudDeleteSchema = Joi.object().keys({
 router.delete('/api/v1/cloud', async (ctx, next) => {
     const { body } = ctx.request
 
-    const result = Joi.validate(body, cloudDeleteSchema)
+    const result = cloudDeleteSchema.validate(body)
     if (result.error) {
         ctx.response.status = 400
         return ctx.body = {
